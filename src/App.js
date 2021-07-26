@@ -1,40 +1,44 @@
 //import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import Error from './components/Error'
+import React, { useEffect, useState, useRef } from 'react'
 import Footer from './components/Footer'
+import Error from './components/Error'
 import Note from './components/Note'
 import noteService from './services/Note'
 import loginService from './services/login'
+import LoginForm from './components/LoginForm'
+import Togglable from './components/Togglable'
+import AddNote from './components/AddNote'
 
 const App = () => {
   const [notes, setNotes] = useState([])
-  const [newNote, setNewNotes] = useState('')
+  //const [newNote, setNewNotes] = useState('')
   const [showAll, setShowAll] = useState(true)
   const [ errorMessage, setErrorMessage ] = useState('')
   const [ username, setUsername] = useState('') 
   const [ password, setPassword] = useState('') 
   const [ user, setUser ] = useState(null)
+  //const [loginVisible, setLoginVisible] = useState(false)
 
   const loginForm = () => (
-    <form onSubmit={handleLogin}>
-    <div>
-      username
-      <input type="text" value={username} name="username" onChange={(e) => setUsername(e.target.value)}/>
-    </div>
-    <div>
-      passowrd
-      <input type="password" value={password} name="password" onChange={(e) => setPassword(e.target.value)}/>
-    </div>
-    <button type="submit">Login</button>
-  </form>
+    <Togglable buttonLabel='login'>
+      <LoginForm
+        username={username}
+        password={password}
+        handleUsernameChange={({ target }) => setUsername(target.value)}
+        handlePasswordChange={({ target }) => setPassword(target.value)}
+        handleLogin={handleLogin}
+      />
+    </Togglable>
   )
-  
+  const noteFormRef = useRef()
   const noteForm = () => (
-    <form onSubmit={addNote}>
-        <input value={newNote} onChange={handleNoteChange}/>
-        <button type='submit' disabled={!newNote}>Add</button>
-      </form>
+    <Togglable buttonLabel='new note' ref={noteFormRef}>
+      <AddNote 
+        addNote={addNote} 
+      />
+    </Togglable>
   )
+
   const handleLogin = async (e) => {
     e.preventDefault()
     try{
@@ -57,27 +61,25 @@ const App = () => {
     setUser(null)
   }
 
-  const addNote = (e) => {
-    e.preventDefault()
-    const newNoteToAdd = {
-      content: newNote,
-      date: new Date().toISOString(),
-      important: Math.random() < 0.5
-    }
-    //console.log('adddddddddddd', newNoteToAdd);
+
+
+  const addNote = (newNoteToAdd) => {
+    
+    noteFormRef.current.toggleVisibility()
     noteService
     .create(newNoteToAdd)
     .then( returnedNotes => {
       //console.log('after addd', returnedNotes)
       newNoteToAdd.id= returnedNotes.id
       setNotes(notes.concat(newNoteToAdd))
-      setNewNotes('')
+      //setNewNotes('')
     })
-  }
-
-  const handleNoteChange = (e) => {
-    e.preventDefault()
-    setNewNotes(e.target.value)
+    .catch( error => {
+      setErrorMessage(error.response.data.error)
+      setTimeout(() => {
+        setErrorMessage('')
+      }, 5000)
+    })
   }
 
   const handleShowChange = () => {
@@ -141,27 +143,23 @@ const App = () => {
   
   return (
     <div>
-      <h1>Notes</h1>
       <Error message={errorMessage}/>
-
+      <h1>Notes</h1>
       { user === null 
-      ? loginForm() 
+      ? loginForm()
       : <div>
-        <p>{user.username} logged in  <button onClick={handleLogout}>Log out</button> </p> 
-        {noteForm()}
-        <div>
-        <button onClick={handleShowChange}>Show {showAll ? 'All' : 'Important'}</button>
-
-        </div>
-        <ul style={{padding: '5px'}}>
-          {noteToShow.map(note => 
-            <Note key={note.id} note={note} toggleImportant={ () => handleToggleImportant(note.id)} deleteNote={ () => handleDeleteNote(note.id)}/>
-          )}
-        </ul>
+          <p>{user.username} logged in  <button onClick={handleLogout}>Log out</button> </p> 
+          {noteForm()}
+          
+          <div>
+            <button onClick={handleShowChange}>Show {showAll ? 'All' : 'Important'}</button>
+          </div>
+          <ul style={{padding: '5px'}}>
+            {noteToShow.map(note => 
+              <Note key={note.id} note={note} toggleImportant={ () => handleToggleImportant(note.id)} deleteNote={ () => handleDeleteNote(note.id)}/>
+            )}
+          </ul>
         </div>}
-
-     
-      
       <Footer />
     </div>
   )

@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const baseURL = "http://localhost:3002/api/notes"
+const baseURL = "/api/notes"
 
 let token = null
 
@@ -44,10 +44,12 @@ const getAll = () => {
     return response.data
   }
   
-  export default { 
-    getAll: getAll, 
-    create: create, 
-    update: update,
+  const logger = {
+    getAll, 
+    create, 
+    update,
     delete: deleteNote,
     setToken
   }
+
+  export default logger

@@ -7,10 +7,10 @@ const Note = ({note, toggleImportant,deleteNote}) => {
     const buttonStyle = {
         margin: '5px'
     }
-    const label = note.important ? 'mark no important' : 'mark important'
+    const label = note.important ? 'make no important' : 'make important'
     return (
         <li style={liStyle}>
-            {note.content}
+            <span>{note.content}</span>
             <button onClick={toggleImportant} style={buttonStyle}>{label}</button>
             <button onClick={deleteNote} style={buttonStyle}>Delete</button>
         </li>
